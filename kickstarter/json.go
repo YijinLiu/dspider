@@ -84,6 +84,7 @@ type SQLRow struct {
 	Goal         float64   `sql:"goal"`
 	Pledged      float64   `sql:"pledged"`
 	Currency     string    `sql:"currency"`
+	USDRate      float64   `sql:"usd_rate"`
 	Country      string    `sql:"country"`
 	BackersCount int       `sql:"backers_count"`
 	CreatedAt    time.Time `sql:"created_at"`
@@ -118,6 +119,7 @@ func (p *JsonParser) Parse(urlStr string, resp *http.Response, spider dspider.Sp
 			Goal:         project.Goal,
 			Pledged:      project.Pledged,
 			Currency:     project.Currency,
+			USDRate:      project.StaticUsdRate,
 			Country:      project.Country,
 			BackersCount: project.BackersCount,
 			CreatedAt:    time.Unix(project.CreatedAt, 0),

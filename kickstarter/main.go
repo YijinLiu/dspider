@@ -15,6 +15,7 @@ var maxConcurrentCrawlsFlag = flag.Int("max-concurrent-crawls", 2, "")
 var maxCrawlRetriesFlag = flag.Int("max-crawl-retries", 3, "")
 var crawlRetryIntervalFlag = flag.Duration("crawl-retry-interval", 3*time.Second, "")
 var outputFileFlag = flag.String("output-file", "", "")
+var sqlDriverFlag = flag.String("sql-driver", "sqlite3", "")
 
 func main() {
 	flag.Parse()
@@ -30,7 +31,7 @@ func main() {
 	if outputFile == "" {
 		outputFile = fmt.Sprintf("kickstarter-%s.sqlite3", time.Now().Format("20060102"))
 	}
-	storage, err := dspider.NewSqlStorage("sqlite3", outputFile, []dspider.SqlTableDef{
+	storage, err := dspider.NewSqlStorage(*sqlDriverFlag, outputFile, []dspider.SqlTableDef{
 		dspider.SqlTableDef{
 			Name: PROJECTS_TABLE_NAME,
 			Columns: map[string]string{
@@ -40,6 +41,7 @@ func main() {
 				"goal":          "REAL NOT NULL",
 				"pledged":       "REAL NOT NULL",
 				"currency":      "TEXT NOT NULL",
+				"usd_rate":      "REAL NOT NULL",
 				"country":       "TEXT NOT NULL",
 				"backers_count": "INTEGER",
 				"created_at":    "TIMESTAMP NOT NULL",
@@ -56,10 +58,8 @@ func main() {
 	}
 	defer storage.Close()
 	spider.AddStorage("^https://www[.]kickstarter[.]com/projects/", storage)
-	parser.wg.Add(3)
+	parser.wg.Add(1)
 	spider.Queue("http://www.kickstarter.com/discover/categories/technology?format=json&sort=end_date")
-	spider.Queue("http://www.kickstarter.com/discover/categories/crafts?format=json&sort=end_date")
-	spider.Queue("http://www.kickstarter.com/discover/categories/design?format=json&sort=end_date")
 	parser.wg.Wait()
 	spider.Shutdown()
 }
